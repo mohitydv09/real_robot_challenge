@@ -9,7 +9,7 @@ import threading
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import PointCloud2, LaserScan, PointField
 from sensor_msgs import point_cloud2
-from geometry_msgs.msg import PoseWithCovarianceStamped, TransformStamped, Twist
+from geometry_msgs.msg import TransformStamped, Twist
 
 import laser_geometry.laser_geometry as lg
 

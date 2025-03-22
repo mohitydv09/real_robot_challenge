@@ -2,7 +2,7 @@
 <package format="2">
   <name>real_robot_challenge</name>
   <version>0.0.0</version>
-  <description>The tb3_kf package</description>
+  <description>The Real Robot Challenge package</description>
   <maintainer email="yadav171@umn.edu">Mohit Yadav</maintainer>
   <license>MIT</license>
 
