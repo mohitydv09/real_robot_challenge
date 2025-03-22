@@ -44,58 +44,69 @@ class RobotController():
     def move_to_pose(self, x, y, theta):
 
         vel_msg = Twist()
+        try:
+            while not rospy.is_shutdown():
+                ## Get the current pose.
+                try:
+                    current_pose = self.tf_buffer.lookup_transform('map', 'robot_base', rospy.Time(0), rospy.Duration(5))
+                except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+                    rospy.logerr("Failed to get the current pose.")
+                    continue
 
-        while not rospy.is_shutdown():
-            ## Get the current pose.
-            try:
-                current_pose = self.tf_buffer.lookup_transform('map', 'robot_base', rospy.Time(0), rospy.Duration(5))
-            except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
-                rospy.logerr("Failed to get the current pose.")
-                continue
+                current_trans = current_pose.transform.translation
+                current_rot = current_pose.transform.rotation
 
-            current_trans = current_pose.transform.translation
-            current_rot = current_pose.transform.rotation
+                _, _, yaw = tf.transformations.euler_from_quaternion([current_rot.x, current_rot.y, current_rot.z, current_rot.w])
 
-            _, _, yaw = tf.transformations.euler_from_quaternion([current_rot.x, current_rot.y, current_rot.z, current_rot.w])
+                x_current = current_trans.x
+                y_current = current_trans.y
+                theta_current = self.normalize_angle(yaw)
 
-            x_current = current_trans.x
-            y_current = current_trans.y
-            theta_current = self.normalize_angle(yaw)
+                ## Compute the position errors
+                dx = x - x_current
+                dy = y - y_current
+                distance_to_goal = np.sqrt(dx**2 + dy**2)
 
-            ## Compute the position errors
-            dx = x - x_current
-            dy = y - y_current
-            distance_to_goal = np.sqrt(dx**2 + dy**2)
+                ## Compute the angle error
+                angle_to_goal = np.arctan2(dy, dx)
+                angle_error = np.arctan2(np.sin(angle_to_goal - theta_current), np.cos(angle_to_goal - theta_current))
 
-            ## Compute the angle error
-            angle_to_goal = np.arctan2(dy, dx)
-            angle_error = np.arctan2(np.sin(angle_to_goal - theta_current), np.cos(angle_to_goal - theta_current))
+                rospy.loginfo(f"Current: {x_current:.3f}, {y_current:.3f}, {theta:.3f} | Goal: {x:.3f}, {y:.3f}, {theta:.3f} | Dist: {distance_to_goal:.3f}, Angle: {angle_error:.3f}")
 
-            rospy.loginfo(f"Current: {x_current:.3f}, {y_current:.3f}, {theta:.3f} | Goal: {x:.3f}, {y:.3f}, {theta:.3f} | Dist: {distance_to_goal:.3f}, Angle: {angle_error:.3f}")
-
-            if distance_to_goal > self.dist_threshold:
-                ## Scale the linear speed based on the angle error.
-                linear_speed_scaling_factor = min(1, np.exp(-5*abs(angle_error)))
-                vel_msg.linear.x = np.clip(self.kp_linear * linear_speed_scaling_factor, 0, self.max_linear_speed)
-                vel_msg.angular.z = np.clip(self.kp_angular * angle_error, -self.max_angular_speed, self.max_angular_speed)
-
-            else:
-                ## Close to the goal.
-                vel_msg.linear.x = 0.0
-
-                ## Calculate the angle error.
-                angle_error = np.arctan2(np.sin(theta - theta_current), np.cos(theta - theta_current))
-
-                ## Align with the goal orientation.
-                if abs(angle_error) > self.angle_threshold:
+                if distance_to_goal > self.dist_threshold:
+                    ## Scale the linear speed based on the angle error.
+                    linear_speed_scaling_factor = min(1, np.exp(-5*abs(angle_error)))
+                    vel_msg.linear.x = np.clip(self.kp_linear * linear_speed_scaling_factor, 0, self.max_linear_speed)
                     vel_msg.angular.z = np.clip(self.kp_angular * angle_error, -self.max_angular_speed, self.max_angular_speed)
+
                 else:
+                    ## Close to the goal.
                     vel_msg.linear.x = 0.0
-                    vel_msg.angular.z = 0.0
-                    self.cmd_vel_pub.publish(vel_msg)
-                    rospy.loginfo("Goal Reached. Stopping the robot.")
-                    break
-            
+
+                    ## Calculate the angle error.
+                    angle_error = np.arctan2(np.sin(theta - theta_current), np.cos(theta - theta_current))
+
+                    ## Align with the goal orientation.
+                    if abs(angle_error) > self.angle_threshold:
+                        vel_msg.angular.z = np.clip(self.kp_angular * angle_error, -self.max_angular_speed, self.max_angular_speed)
+                    else:
+                        vel_msg.linear.x = 0.0
+                        vel_msg.angular.z = 0.0
+                        self.cmd_vel_pub.publish(vel_msg)
+                        rospy.loginfo("Goal Reached. Stopping the robot.")
+                        break
+                
+                self.cmd_vel_pub.publish(vel_msg)
+
+        except KeyboardInterrupt:
+            rospy.logerr("Keyboard interrupt received. Stopping the robot.")
+            vel_msg.linear.x = 0.0
+            vel_msg.angular.z = 0.0
+            self.cmd_vel_pub.publish(vel_msg)
+        except Exception as e:
+            rospy.logerr(f"An error occurred: {str(e)}")
+            vel_msg.linear.x = 0.0
+            vel_msg.angular.z = 0.0
             self.cmd_vel_pub.publish(vel_msg)
 
 def main():
