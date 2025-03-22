@@ -29,17 +29,40 @@ class RobotController():
         ## Publisher for cmd_vel
         self.cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 
+    def move_robot_forward(self, distance):
+        '''Move the robot forward for the given distance.'''
+        velocity = 0.1
+        time = distance / velocity
+        curr_time = rospy.Time.now().to_sec()
+        vel_msg = Twist()
+        while rospy.Time.now().to_sec() - curr_time < time:
+            vel_msg.linear.x = velocity
+            self.cmd_vel_pub.publish(vel_msg)
+        vel_msg.linear.x = 0.0
+        self.cmd_vel_pub.publish(vel_msg)
+    
+    def rotate_robot(self, angle):
+        '''Rotate the robot by the given angle.'''
+        angular_speed = 0.5
+        time = angle / angular_speed
+        curr_time = rospy.Time.now().to_sec()
+        vel_msg = Twist()
+        while rospy.Time.now().to_sec() - curr_time < time:
+            vel_msg.angular.z = angular_speed
+            self.cmd_vel_pub.publish(vel_msg)
+        vel_msg.angular.z = 0.0
+        self.cmd_vel_pub.publish(vel_msg)
+
+    @staticmethod
+    def normalize_angle(angle):
+        '''Helper function to Normalize the angle between -pi to pi.'''
+        return (angle + np.pi) % (2 * np.pi) - np.pi
     
     def move_to_waypoints(self, waypoints : list):
         '''Move the robot to the given waypoints.
         waypoints : List of tuples (x, y, theta)'''
         for pose in waypoints:
             self.move_to_pose(pose[0], pose[1], pose[2])
-    
-    @staticmethod
-    def normalize_angle(angle):
-        '''Helper function to Normalize the angle between -pi to pi.'''
-        return (angle + np.pi) % (2 * np.pi) - np.pi
 
     def move_to_pose(self, x, y, theta):
 
