@@ -35,21 +35,26 @@ class RobotController():
         time = distance / velocity
         curr_time = rospy.Time.now().to_sec()
         vel_msg = Twist()
-        while rospy.Time.now().to_sec() - curr_time < time:
+        rate = rospy.Rate(100)
+        while rospy.Time.now().to_sec() - curr_time < time and not rospy.is_shutdown():
             vel_msg.linear.x = velocity
             self.cmd_vel_pub.publish(vel_msg)
+            rate.sleep()
         vel_msg.linear.x = 0.0
         self.cmd_vel_pub.publish(vel_msg)
     
     def rotate_robot(self, angle):
-        '''Rotate the robot by the given angle.'''
-        angular_speed = 0.2
+        '''Rotate the robot by the given angle. 
+        Positive angle is counter-clockwise.'''
+        angular_speed = 0.5
         time = angle / angular_speed
         curr_time = rospy.Time.now().to_sec()
         vel_msg = Twist()
-        while rospy.Time.now().to_sec() - curr_time < time:
+        rate = rospy.Rate(100)
+        while rospy.Time.now().to_sec() - curr_time < time and not rospy.is_shutdown():
             vel_msg.angular.z = angular_speed
             self.cmd_vel_pub.publish(vel_msg)
+            rate.sleep()
         vel_msg.angular.z = 0.0
         self.cmd_vel_pub.publish(vel_msg)
 
@@ -132,18 +137,40 @@ class RobotController():
             vel_msg.angular.z = 0.0
             self.cmd_vel_pub.publish(vel_msg)
 
+    def stop_robot(self):
+        '''Stop the robot.'''
+        rospy.loginfo("Stop Robot Called.")
+        vel_msg = Twist()
+        vel_msg.linear.x = 0.0
+        vel_msg.angular.z = 0.0
+        self.cmd_vel_pub.publish(vel_msg)
+
+def move_robot_in_a_square(controller):
+    controller.move_robot_forward(1.5)
+    controller.rotate_robot(np.pi/2)
+    controller.move_robot_forward(1.5)
+    controller.rotate_robot(np.pi/2)
+    controller.move_robot_forward(1.5)
+    controller.rotate_robot(np.pi/2)
+    controller.move_robot_forward(1.5)
+
+
 def main():
     rospy.init_node('robot_controller')
 
     controller = RobotController()
 
-    waypoints = [
-        (1.60, 0.25, 0.0),
-        (1.60, 1.17, np.pi/2),
-        (1.00, 1.17, np.pi),
-    ]
+    ## Move Robot in a Square
+    move_robot_in_a_square(controller)
 
-    controller.move_to_waypoints(waypoints)
+    # ## Move to Waypoints
+    # waypoints = [
+    #     (1.60, 0.25, 0.0),
+    #     (1.60, 1.17, np.pi/2),
+    #     (1.00, 1.17, np.pi),
+    # ]
+
+    # controller.move_to_waypoints(waypoints)
 
     rospy.spin()
 
