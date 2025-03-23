@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import os
 import rospy
 import yaml
 import tf2_ros
@@ -27,9 +28,12 @@ class LocalizationNode():
         self.last_time = None
 
         ## Load the presaved Pointcloud map
-        self.load_map('utils/map.yaml')
-        self.map_pcd = o3d.io.read_point_cloud('utils/arena.pcd') 
+        self.load_map(os.path.join(os.path.dirname(__file__), 'utils/map.yaml'))
+        self.map_pcd = o3d.io.read_point_cloud(os.path.join(os.path.dirname(__file__), 'utils/arena.pcd'))
         self.initialization_transform = None
+
+        self.map_pub = rospy.Publisher('/map', OccupancyGrid, queue_size=10)
+        self.map_timer = rospy.Timer(rospy.Duration(1), self.publish_map)
 
         ## Helper for LaserScan to PointCloud Conversions.
         self.laser_projector = lg.LaserProjection()
@@ -48,8 +52,12 @@ class LocalizationNode():
             map_data = yaml.safe_load(f)
 
         # Read the PGM file (map image) using PIL
-        map_image = Image.open(map_data['image']).convert('L')  # Convert to grayscale
+        map_image = Image.open(os.path.join(os.path.dirname(__file__),map_data['image'])).convert('L')  # Convert to grayscale
         self.map_pgm = np.array(map_image, dtype=np.uint8)
+
+        occ_grid = np.full(self.map_pgm.shape, -1, dtype=np.int8)
+        occ_grid[self.map_pgm < 100] = 0
+        occ_grid[self.map_pgm > 200] = 100
 
         self.map_resolution = map_data['resolution']
         self.map_origin = map_data['origin']
@@ -63,13 +71,9 @@ class LocalizationNode():
         self.map_msg.info.origin.position.x = self.map_origin[0]
         self.map_msg.info.origin.position.y = self.map_origin[1]
         self.map_msg.info.origin.position.z = self.map_origin[2]
-        self.map_msg.data = self.map_pgm.flatten().tolist()
+        self.map_msg.data = occ_grid.flatten().tolist()
 
-        # Publish map
-        self.map_pub = rospy.Publisher('/map', OccupancyGrid, queue_size=10)
-        self.publish_map()
-
-    def publish_map(self):
+    def publish_map(self, event=None):
         '''Publish the loaded map as an OccupancyGrid.'''
         self.map_pub.publish(self.map_msg)
 
@@ -204,7 +208,7 @@ class LocalizationNode():
         t.transform.rotation.z = np.sin(theta / 2)
         t.transform.rotation.w = np.cos(theta / 2)
         self.br.sendTransform(t)
-        rospy.loginfo(f'Published transform: {t}')
+        rospy.loginfo(f'Publishing transform \n{t}')
 
 def main():
     rospy.init_node('localization_node')

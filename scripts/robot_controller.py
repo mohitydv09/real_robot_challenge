@@ -43,7 +43,7 @@ class RobotController():
     
     def rotate_robot(self, angle):
         '''Rotate the robot by the given angle.'''
-        angular_speed = 0.5
+        angular_speed = 0.2
         time = angle / angular_speed
         curr_time = rospy.Time.now().to_sec()
         vel_msg = Twist()
