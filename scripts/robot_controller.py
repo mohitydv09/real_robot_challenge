@@ -111,7 +111,7 @@ class RobotController():
                 ## Close to the goal.
                 vel_msg.linear.x = 0.0
 
-                ## Calculate the angle error.
+                ## Calculate the angle error using arctan2 to avoid discontinuity at -pi and pi.
                 angle_error = np.arctan2(np.sin(theta - theta_current), np.cos(theta - theta_current))
 
                 ## Align with the goal orientation.
@@ -126,7 +126,6 @@ class RobotController():
 
     def stop_robot(self):
         '''Stop the robot.'''
-        rospy.loginfo("Stop Robot Called.")
         vel_msg = Twist()
         vel_msg.linear.x = 0.0
         vel_msg.angular.z = 0.0
@@ -153,17 +152,17 @@ def main():
     ## Ensure the robot stops if the node is killed.
     rospy.on_shutdown(controller.stop_robot)
 
-    ## Move Robot in a Square
-    move_robot_in_a_square(controller)
+    # ## Move Robot in a Square
+    # move_robot_in_a_square(controller)
 
-    # ## Move to Waypoints
-    # waypoints = [
-    #     (1.60, 0.25, 0.0),
-    #     (1.60, 1.17, np.pi/2),
-    #     (1.00, 1.17, np.pi),
-    # ]
+    ## Move to Waypoints
+    waypoints = [
+        (1.38, 0.46, 0.0),
+        (1.38, 1.38, np.pi/2),
+        (0.60, 1.18, np.pi),
+    ]
 
-    # controller.move_to_waypoints(waypoints)
+    controller.move_to_waypoints(waypoints)
 
     rospy.signal_shutdown("Task Completed. Shutting down the node.")
 

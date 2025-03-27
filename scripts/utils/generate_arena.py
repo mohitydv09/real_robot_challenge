@@ -62,7 +62,7 @@ def draw_line(arr, points, start, end):
 
 # Write information to yaml
 with open(yaml_name, 'w') as yaml_f:
-	yaml_f.write("image: " + img_name + "\n")
+	yaml_f.write("image: " + 'utils/' + img_name + "\n")
 	yaml_f.write("resolution: " + str(resolution) + "\n")
 	yaml_f.write("origin: " + str(origin) + "\n")
 	yaml_f.write("negate: " + str(negate) + "\n")
@@ -80,9 +80,10 @@ draw_line(arr, points, (0, 0), (arena_size, 0))
 draw_line(arr, points, (arena_size, 0), (arena_size, arena_size))
 draw_line(arr, points, (0, arena_size), (arena_size, arena_size))
 
-draw_line(arr, points, (0.48, 0.51), (1.37, 0.51))
-draw_line(arr, points, (0.48, 0.51), (0.48, 1.42))
-draw_line(arr, points, (0.48, 1.42), (1.37, 1.42))
+# draw_line(arr, points, (0.48, 0.51), (1.37, 0.51))
+# draw_line(arr, points, (0.48, 0.51), (0.48, 1.42))
+# draw_line(arr, points, (0.48, 1.42), (1.37, 1.42))
+draw_line(arr, points, (0 , 0.92), (0.92, 0.92))
 
 ## Write the image to a file
 arr = arr.astype(np.uint8)
@@ -99,7 +100,7 @@ points = np.hstack((points, z_values))
 pcd = o3d.geometry.PointCloud()
 pcd.points = o3d.utility.Vector3dVector(points)
 
-# ## Visualize the point cloud with coordinate frame for debugging
+## Visualize the point cloud with coordinate frame for debugging
 # coordinate_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.5, origin=[0, 0, 0])
 # o3d.visualization.draw_geometries([pcd, coordinate_frame])
 

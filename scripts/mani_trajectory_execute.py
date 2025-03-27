@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Original work: official beginner's documentation from Moveit
 # 
 # Link: https://ros-planning.github.io/moveit_tutorials/doc/motion_planning_pipeline/motion_planning_pipeline_tutorial.html
 
 # Author: Acorn Pooley, Mike Lautman
-
 
 # Modified by: Xun Tu
 
@@ -203,9 +202,13 @@ class MoveGroupPythonInterfaceSimple(object):
         ## Baseline Method: move the gripper near the target, and close it
         self.set_gripper_width(0.012)
         time.sleep(1)
+
         ## TODO: fill up the trajectory list below with your own recorded joint states
-        
-        trajectory_list = [[0, 0*pi/180, 0*pi/180, 0*pi/180]]
+        ## Fill the angles in Degree
+        trajectory_list = [[0, 45, -20, 40]] 
+
+        ## Convert angel to radian
+        trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
         for wp in trajectory_list:
             self.go_to_joint_state_arm(wp)
             # Somehow "wait=True" doesn't prevent the system from pausing for a enough long time...
