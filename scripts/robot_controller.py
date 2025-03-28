@@ -29,17 +29,18 @@ class RobotController():
         ## Publisher for cmd_vel
         self.cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 
+        self.rate = rospy.Rate(20)
+
     def move_robot_forward(self, distance):
         '''Move the robot forward for the given distance.'''
         velocity = 0.1
         time = distance / velocity
         curr_time = rospy.Time.now().to_sec()
         vel_msg = Twist()
-        rate = rospy.Rate(100)
         while rospy.Time.now().to_sec() - curr_time < time and not rospy.is_shutdown():
             vel_msg.linear.x = velocity
             self.cmd_vel_pub.publish(vel_msg)
-            rate.sleep()
+            self.rate.sleep()
         vel_msg.linear.x = 0.0
         self.cmd_vel_pub.publish(vel_msg)
     
@@ -50,13 +51,13 @@ class RobotController():
         time = angle / angular_speed
         curr_time = rospy.Time.now().to_sec()
         vel_msg = Twist()
-        rate = rospy.Rate(100)
         while rospy.Time.now().to_sec() - curr_time < time and not rospy.is_shutdown():
             vel_msg.angular.z = angular_speed
             self.cmd_vel_pub.publish(vel_msg)
-            rate.sleep()
+            self.rate.sleep()
         vel_msg.angular.z = 0.0
         self.cmd_vel_pub.publish(vel_msg)
+        self.rate.sleep()
 
     @staticmethod
     def normalize_angle(angle):
@@ -123,6 +124,7 @@ class RobotController():
                     break
             
             self.cmd_vel_pub.publish(vel_msg)
+            self.rate.sleep()
 
     def stop_robot(self):
         '''Stop the robot.'''
@@ -156,13 +158,13 @@ def main():
     # move_robot_in_a_square(controller)
 
     ## Move to Waypoints
-    waypoints = [
-        (1.38, 0.50, np.pi/2),
-        (1.38, 1.45, np.pi),
-        (0.46, 1.45, np.pi),
-    ]
+    # waypoints = [
+    #     (1.38, 0.50, np.pi/2),
+    #     (1.38, 1.45, np.pi),
+    #     (0.46, 1.45, np.pi),
+    # ]
 
-    controller.move_to_waypoints(waypoints)
+    # controller.move_to_waypoints(waypoints)
 
     rospy.signal_shutdown("Task Completed. Shutting down the node.")
 
