@@ -126,7 +126,7 @@ class LocalizationNode():
     @staticmethod
     def normalize_angle(angle):
         '''Helper function to Normalize the angle between -pi to pi.'''
-        return (angle + np.pi) % (2 * np.pi) - np.pi
+        return np.arctan2(np.sin(angle), np.cos(angle))
 
     def icp_match(self, scan_pcd : o3d.geometry.PointCloud):
 

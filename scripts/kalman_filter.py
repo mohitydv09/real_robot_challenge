@@ -8,12 +8,12 @@ class KalmanFilter:
 
         self.P = np.eye(3) * 0.1            ## Covariance Matrix
         self.Q = np.eye(3) * 0.01           ## Process Noise
-        self.R = np.eye(3) * 1.0            ## Measurement Noise
+        self.R = np.eye(3) * 0.5            ## Measurement Noise
 
     @staticmethod
     def normalize_angle(angle):
         '''Helper function to Normalize the angle between -pi to pi.'''
-        return (angle + np.pi) % (2 * np.pi) - np.pi
+        return np.arctan2(np.sin(angle), np.cos(angle))
 
     def predict(self, v, w, dt):
         theta = self.x[2, 0]
@@ -42,7 +42,11 @@ class KalmanFilter:
         K = self.P @ H.T @ np.linalg.inv(H @ self.P @ H.T + self.R)
 
         ## Update the state.
-        self.x = self.x + K @ (z - H @ self.x)
+        innovation = z - H @ self.x
+        innovation[2, 0] = self.normalize_angle(innovation[2, 0])
+
+        self.x = self.x + K @ innovation
+
         self.x[2, 0] = self.normalize_angle(self.x[2, 0])
 
         ## Update the Covariance Matrix

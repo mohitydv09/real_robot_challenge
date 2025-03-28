@@ -13,7 +13,7 @@
 
 # Python 2/3 compatibility imports
 from __future__ import print_function
-from six.moves import input
+from six.moves import input 
 
 import sys
 import copy
@@ -218,10 +218,10 @@ class MoveGroupPythonInterfaceSimple(object):
  	    # Stay for a while
         time.sleep(0.5)
         # Close the gripper (don't use 0.0 for your case, since it may damage the motor)
-        self.set_gripper_width(0.0)
+        self.set_gripper_width(-0.01)
         
         # Optional move the gripper back to zero pose
-        # self.go_to_joint_state_arm([0, 0, 0, 0])
+        self.go_to_joint_state_arm([0, 0, 0, 0])
         ## Custom Method (Optional)
 
     #####################################################

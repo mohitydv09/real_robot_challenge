@@ -61,7 +61,7 @@ class RobotController():
     @staticmethod
     def normalize_angle(angle):
         '''Helper function to Normalize the angle between -pi to pi.'''
-        return (angle + np.pi) % (2 * np.pi) - np.pi
+        return np.arctan2(np.sin(angle), np.cos(angle))
     
     def move_to_waypoints(self, waypoints : list):
         '''Move the robot to the given waypoints.
@@ -97,9 +97,9 @@ class RobotController():
 
             ## Compute the angle error
             angle_to_goal = np.arctan2(dy, dx)
-            angle_error = np.arctan2(np.sin(angle_to_goal - theta_current), np.cos(angle_to_goal - theta_current))
+            angle_error = self.normalize_angle(angle_to_goal - theta_current)
 
-            rospy.loginfo(f"Current: {x_current:.3f}, {y_current:.3f}, {theta:.3f} | Goal: {x:.3f}, {y:.3f}, {theta:.3f} | Dist: {distance_to_goal:.3f}, Angle: {angle_error:.3f}")
+            rospy.loginfo(f"Current: {x_current:.3f}, {y_current:.3f}, {theta_current:.3f} | Goal: {x:.3f}, {y:.3f}, {theta:.3f} | Dist: {distance_to_goal:.3f}, Angle: {angle_error:.3f}")
 
             if distance_to_goal > self.dist_threshold:
                 ## Scale the linear speed based on the angle error.
@@ -112,7 +112,7 @@ class RobotController():
                 vel_msg.linear.x = 0.0
 
                 ## Calculate the angle error using arctan2 to avoid discontinuity at -pi and pi.
-                angle_error = np.arctan2(np.sin(theta - theta_current), np.cos(theta - theta_current))
+                angle_error = self.normalize_angle(theta - theta_current)
 
                 ## Align with the goal orientation.
                 if abs(angle_error) > self.angle_threshold:
@@ -157,9 +157,9 @@ def main():
 
     ## Move to Waypoints
     waypoints = [
-        (1.38, 0.46, 0.0),
-        (1.38, 1.38, np.pi/2),
-        (0.60, 1.18, np.pi),
+        (1.38, 0.50, np.pi/2),
+        (1.38, 1.45, np.pi),
+        (0.46, 1.45, np.pi),
     ]
 
     controller.move_to_waypoints(waypoints)
