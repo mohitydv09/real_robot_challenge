@@ -133,15 +133,15 @@ class RobotController():
         vel_msg.angular.z = 0.0
         self.cmd_vel_pub.publish(vel_msg)
 
-def move_robot_in_a_square(controller):
+def move_robot_in_a_square(controller, side_length=1.0):
     try:
-        controller.move_robot_forward(1.5)
+        controller.move_robot_forward(side_length)
         controller.rotate_robot(np.pi/2)
-        controller.move_robot_forward(1.5)
+        controller.move_robot_forward(side_length)
         controller.rotate_robot(np.pi/2)
-        controller.move_robot_forward(1.5)
+        controller.move_robot_forward(side_length)
         controller.rotate_robot(np.pi/2)
-        controller.move_robot_forward(1.5)
+        controller.move_robot_forward(side_length)
     except Exception as e:
         rospy.logerr(f"An error occurred: {str(e)}")
 
@@ -155,7 +155,7 @@ def main():
     rospy.on_shutdown(controller.stop_robot)
 
     # ## Move Robot in a Square
-    # move_robot_in_a_square(controller)
+    # move_robot_in_a_square(controller, side_length=1.0)
 
     ## Move to Waypoints
     # waypoints = [
