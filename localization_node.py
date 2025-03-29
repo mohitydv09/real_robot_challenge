@@ -103,25 +103,6 @@ class LocalizationNode():
         '''Publish the loaded map as an OccupancyGrid.'''
         self.map_pub.publish(self.map_msg)
 
-    def odom_callback(self, msg : Odometry):
-        '''Run the predict step of KF each time odometry data is recieved.'''
-        ## If this is first run just update the time.
-        if self.last_time is None:
-            self.last_time = msg.header.stamp.to_sec()
-            return
-        
-        current_time = msg.header.stamp.to_sec()
-        dt = current_time - self.last_time
-        self.last_time = current_time
-
-        ## Get the velocity values from Odometry Message.
-        ## These are in base_footprint frame.
-        v = msg.twist.twist.linear.x
-        w = msg.twist.twist.angular.z
-        
-        self.kf.predict(v, w, dt)  
-        self.publish_pose()
-
     def lidar_callback(self, msg : LaserScan):
         '''Run the Update step of KF each time lidar data is recieved.'''
         ## Convert the LidarScan to PointCloud.
@@ -179,18 +160,7 @@ class LocalizationNode():
         self.initialization_transform = transformation
 
         ## Transformt the PointCloud for publishing.
-        scan_pcd.tranform(transformation)
-
-        # ## Origin Coordinate Frame
-        # # origin_cordi = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.5)
-
-        # ## Plot the pointcloud for 3D visulaization
-        # o3d.visualization.draw_geometries([
-        #     scan_pcd,
-        #     self.map_pcd,
-        #     scan_pcd_transformed,
-        #     # origin_cordi,
-        # ])
+        scan_pcd.transform(transformation)
 
         ## Publish the transformed PointCloud.
         self.transformed_pointcloud_publisher(scan_pcd)
