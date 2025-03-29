@@ -48,7 +48,6 @@ class LocalizationNode():
 
     def joint_state_callback(self, msg : JointState):
         '''Get the joint state from the robot.'''
-        rospy.loginfo(' Hello from Joint State Callback')
         ## If this is first run just update the time.
         if self.last_time is None:
             self.last_time = msg.header.stamp.to_sec()
