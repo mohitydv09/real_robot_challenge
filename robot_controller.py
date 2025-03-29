@@ -31,34 +31,6 @@ class RobotController():
 
         self.rate = rospy.Rate(20)
 
-    def move_robot_forward(self, distance):
-        '''Move the robot forward for the given distance.'''
-        velocity = 0.1
-        time = distance / velocity
-        curr_time = rospy.Time.now().to_sec()
-        vel_msg = Twist()
-        while rospy.Time.now().to_sec() - curr_time < time and not rospy.is_shutdown():
-            vel_msg.linear.x = velocity
-            self.cmd_vel_pub.publish(vel_msg)
-            self.rate.sleep()
-        vel_msg.linear.x = 0.0
-        self.cmd_vel_pub.publish(vel_msg)
-    
-    def rotate_robot(self, angle):
-        '''Rotate the robot by the given angle. 
-        Positive angle is counter-clockwise.'''
-        angular_speed = 0.5
-        time = angle / angular_speed
-        curr_time = rospy.Time.now().to_sec()
-        vel_msg = Twist()
-        while rospy.Time.now().to_sec() - curr_time < time and not rospy.is_shutdown():
-            vel_msg.angular.z = angular_speed
-            self.cmd_vel_pub.publish(vel_msg)
-            self.rate.sleep()
-        vel_msg.angular.z = 0.0
-        self.cmd_vel_pub.publish(vel_msg)
-        self.rate.sleep()
-
     @staticmethod
     def normalize_angle(angle):
         '''Helper function to Normalize the angle between -pi to pi.'''
@@ -133,19 +105,6 @@ class RobotController():
         vel_msg.angular.z = 0.0
         self.cmd_vel_pub.publish(vel_msg)
 
-def move_robot_in_a_square(controller, side_length=1.0):
-    try:
-        controller.move_robot_forward(side_length)
-        controller.rotate_robot(np.pi/2)
-        controller.move_robot_forward(side_length)
-        controller.rotate_robot(np.pi/2)
-        controller.move_robot_forward(side_length)
-        controller.rotate_robot(np.pi/2)
-        controller.move_robot_forward(side_length)
-    except Exception as e:
-        rospy.logerr(f"An error occurred: {str(e)}")
-
-
 def main():
     rospy.init_node('robot_controller')
 
@@ -153,9 +112,6 @@ def main():
 
     ## Ensure the robot stops if the node is killed.
     rospy.on_shutdown(controller.stop_robot)
-
-    # ## Move Robot in a Square
-    # move_robot_in_a_square(controller, side_length=1.0)
 
     # Move to Waypoints
     waypoints = [
