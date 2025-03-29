@@ -10,7 +10,7 @@ from PIL import Image
 import laser_geometry.laser_geometry as lg
 
 from sensor_msgs import point_cloud2
-from sensor_msgs.msg import LaserScan, PointCloud2, PointField
+from sensor_msgs.msg import LaserScan, PointCloud2, PointField, JointState
 from nav_msgs.msg import Odometry, OccupancyGrid
 from geometry_msgs.msg import TransformStamped
 
@@ -20,7 +20,8 @@ class LocalizationNode():
     def __init__(self):
         rospy.loginfo('Localization Node Started.')
 
-        self.odom_sub = rospy.Subscriber('/odom', Odometry, self.odom_callback, queue_size=50)
+
+        self.joint_state_sub = rospy.Subscriber('/joint_states', JointState, self.joint_state_callback, queue_size=50)
         self.scan_sub = rospy.Subscriber('/scan', LaserScan, self.lidar_callback, queue_size=10)
         self.transformed_pointcloud_pub = rospy.Publisher('/laser_pointcloud', PointCloud2, queue_size=10)
 
@@ -44,6 +45,32 @@ class LocalizationNode():
         ## Transform Listener
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
+
+    def joint_state_callback(self, msg : JointState):
+        '''Get the joint state from the robot.'''
+        rospy.loginfo(' Hello from Joint State Callback')
+        ## If this is first run just update the time.
+        if self.last_time is None:
+            self.last_time = msg.header.stamp.to_sec()
+            return
+        
+        current_time = msg.header.stamp.to_sec()
+        dt = current_time - self.last_time
+        self.last_time = current_time
+
+        ## Get the velocity values from JointState Message.
+        w_left, w_right = msg.velocity[0], msg.velocity[1]
+
+        ## Robot Model Constants, There values are taken from the robot model.
+        wheel_radius = 0.033 ## 33 mm
+        half_wheel_track = 0.144 ## 144 mm
+        
+        ## Convert the wheel velocities to linear and angular velocities.
+        v = wheel_radius * (w_left + w_right) / 2
+        w = wheel_radius * (w_right - w_left) / (2 * half_wheel_track)
+
+        self.kf.predict(v, w, dt)
+        self.publish_pose()
 
 
     def load_map(self, map_yaml_path):

@@ -157,14 +157,14 @@ def main():
     # ## Move Robot in a Square
     # move_robot_in_a_square(controller, side_length=1.0)
 
-    ## Move to Waypoints
-    # waypoints = [
-    #     (1.38, 0.50, np.pi/2),
-    #     (1.38, 1.45, np.pi),
-    #     (0.46, 1.45, np.pi),
-    # ]
+    # Move to Waypoints
+    waypoints = [
+        (1.38, 0.50, np.pi/2),
+        (1.38, 1.45, np.pi),
+        (0.46, 1.45, np.pi),
+    ]
 
-    # controller.move_to_waypoints(waypoints)
+    controller.move_to_waypoints(waypoints)
 
     rospy.signal_shutdown("Task Completed. Shutting down the node.")
 
