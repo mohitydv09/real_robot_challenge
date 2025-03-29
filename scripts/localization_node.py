@@ -179,11 +179,8 @@ class LocalizationNode():
 
         self.initialization_transform = transformation
 
-        ## TODO: Remove the data coping here.
-        scan_pcd_transformed_points = scan_pcd.points
-        scan_pcd_transformed = o3d.geometry.PointCloud()
-        scan_pcd_transformed.points = scan_pcd_transformed_points
-        scan_pcd_transformed.transform(transformation)
+        ## Transformt the PointCloud for publishing.
+        scan_pcd.tranform(transformation)
 
         # ## Origin Coordinate Frame
         # # origin_cordi = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.5)
@@ -197,7 +194,7 @@ class LocalizationNode():
         # ])
 
         ## Publish the transformed PointCloud.
-        self.transformed_pointcloud_publisher(scan_pcd_transformed)
+        self.transformed_pointcloud_publisher(scan_pcd)
 
         return np.array([[x], [y], [theta]])
 
